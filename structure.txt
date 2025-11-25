@@ -1,0 +1,17 @@
+kafka-autonomous-taxis/
+│
+├── README.md
+├── docker-compose.yml
+│
+├── src/
+│   ├── producer_taxi.py
+│   └── consumer_fleet_monitor.py
+│
+├── config/
+│   └── (optional config files later)
+│
+├── data/
+│   └── (if consumer writes data here)
+│
+└── screenshots/
+    └── (to add later from your runs)
