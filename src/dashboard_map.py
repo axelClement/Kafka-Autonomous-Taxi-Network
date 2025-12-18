@@ -4,14 +4,18 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 import plotly.express as px
+import plotly.graph_objects as go
 from streamlit_autorefresh import st_autorefresh
 
+# --------------------------------------------------
+# CONFIG
+# --------------------------------------------------
 STATE_FILE = Path(__file__).resolve().parents[1] / "data" / "fleet_state.json"
 
 st.set_page_config(page_title="Fleet Map", layout="wide")
 st.title("Autonomous Taxi Fleet – Live Map")
 
-# Auto-refresh every 2 seconds (Streamlit reruns the script)
+# 🔄 Auto-refresh every 2 seconds
 st_autorefresh(interval=2000, key="fleet-refresh")
 
 st.caption(f"Reading state from: {STATE_FILE}")
@@ -20,57 +24,133 @@ if not STATE_FILE.exists():
     st.error("fleet_state.json not found. Start the consumer first.")
     st.stop()
 
+# --------------------------------------------------
+# LOAD DATA
+# --------------------------------------------------
 state = json.loads(STATE_FILE.read_text(encoding="utf-8"))
 
 rows = []
 for taxi_id, v in state.items():
-    rows.append(
-        {
-            "taxi_id": taxi_id,
-            "lat": v.get("lat"),
-            "lon": v.get("lon"),
-            "speed": v.get("speed"),
-            "battery": v.get("battery"),
-            "status": v.get("status", "OK"),
-            "last_update": v.get("last_update"),
-        }
-    )
+    rows.append({
+        "taxi_id": taxi_id,
+        "lat": v.get("lat"),
+        "lon": v.get("lon"),
+        "speed": v.get("speed"),
+        "battery": v.get("battery"),
+        "speed_status": v.get("speed_status", "OK"),
+        "battery_status": v.get("battery_status", "OK"),
+        "last_update": v.get("last_update"),
+    })
 
-df = pd.DataFrame(rows).dropna(subset=["lat", "lon"])
+df_all = pd.DataFrame(rows)
 
+# Numeric safety
+df_all["speed"] = pd.to_numeric(df_all["speed"], errors="coerce")
+df_all["battery"] = pd.to_numeric(df_all["battery"], errors="coerce")
+
+# Combined display status (for debug + hover)
+def compute_display_status(row):
+    s = row.get("speed_status", "OK")
+    b = row.get("battery_status", "OK")
+    if s == "OVERSPEED" and b == "LOW_BATTERY":
+        return "OVERSPEED + LOW_BATTERY"
+    if s == "OVERSPEED":
+        return "OVERSPEED"
+    if b == "LOW_BATTERY":
+        return "LOW_BATTERY"
+    return "OK"
+
+df_all["display_status"] = df_all.apply(compute_display_status, axis=1)
+
+# --------------------------------------------------
+# DEBUG (TOP)
+# --------------------------------------------------
 st.subheader("Fleet state (debug)")
-st.dataframe(df, use_container_width=True)
+st.dataframe(
+    df_all[
+        [
+            "taxi_id",
+            "speed",
+            "battery",
+            "speed_status",
+            "battery_status",
+            "display_status",
+            "lat",
+            "lon",
+            "last_update",
+        ]
+    ],
+    use_container_width=True,
+)
 
+# --------------------------------------------------
+# REAL FLEET STATUS (DYNAMIC)
+# --------------------------------------------------
+st.subheader("Fleet status (real-time)")
+col1, col2, col3 = st.columns(3)
+
+nb_ok = (df_all["display_status"] == "OK").sum()
+nb_overspeed = (df_all["speed_status"] == "OVERSPEED").sum()
+nb_low_battery = (df_all["battery_status"] == "LOW_BATTERY").sum()
+
+col1.metric("🟢 OK", int(nb_ok))
+col2.metric("🔴 Overspeed", int(nb_overspeed))
+col3.metric("!  Low battery", int(nb_low_battery))
+
+# --------------------------------------------------
+# LEGEND (STATIC)
+# --------------------------------------------------
+st.subheader("Legend")
+legend_col1, legend_col2, legend_col3 = st.columns(3)
+legend_col1.markdown("🟢 **OK**  \nNormal operation")
+legend_col2.markdown("🔴 **OVERSPEED**  \nSpeed above threshold")
+legend_col3.markdown("!  **LOW BATTERY**  \nBattery low (symbol on map)")
+
+# --------------------------------------------------
+# MAP DATA (ONLY VALID GPS)
+# --------------------------------------------------
+df = df_all.dropna(subset=["lat", "lon"]).copy()
 if df.empty:
-    st.warning("No valid GPS points found.")
+    st.warning("No valid GPS points found yet.")
     st.stop()
 
-COLOR_MAP = {
-    "OK": "green",
-    "LOW_BATTERY": "red",
-    "OVERSPEED": "orange",
-}
+# Color map based ONLY on speed_status
+COLOR_MAP = {"OK": "green", "OVERSPEED": "red"}
 
-#Map: keep map context stable (center/zoom) while points update
 fig = px.scatter_mapbox(
     df,
     lat="lat",
     lon="lon",
     hover_name="taxi_id",
-    hover_data=["speed", "battery", "status", "last_update"],
-    color="status",
+    hover_data=["speed", "battery", "speed_status", "battery_status", "display_status", "last_update"],
+    color="speed_status",
     color_discrete_map=COLOR_MAP,
     zoom=12,
-    center={"lat": 48.8566, "lon": 2.3522},  # Paris center
+    center={"lat": 48.8566, "lon": 2.3522},
 )
 
-# Big, readable markers
-fig.update_traces(marker=dict(size=20, opacity=0.85))
+fig.update_traces(marker=dict(size=20, opacity=0.9))
+
+# Overlay "!" if battery_status is LOW_BATTERY (independent from speed_status)
+low_battery_df = df[df["battery_status"] == "LOW_BATTERY"]
+if not low_battery_df.empty:
+    fig.add_trace(
+        go.Scattermapbox(
+            lat=low_battery_df["lat"],
+            lon=low_battery_df["lon"],
+            mode="text",
+            text=["!"] * len(low_battery_df),
+            textposition="middle center",
+            textfont=dict(size=18, color="black"),
+            hoverinfo="skip",
+            showlegend=False,
+        )
+    )
 
 fig.update_layout(
     mapbox_style="open-street-map",
+    showlegend=False,
     margin={"r": 0, "t": 0, "l": 0, "b": 0},
-    legend_title_text="Status",
 )
 
 st.subheader("Live fleet map")

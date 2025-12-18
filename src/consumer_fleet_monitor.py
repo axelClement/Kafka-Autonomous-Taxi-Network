@@ -10,7 +10,19 @@ RIDE_TOPIC = "ride-events"
 
 STATE_FILE = Path(__file__).resolve().parents[1] / "data" / "fleet_state.json"
 
+# Thresholds (should match producer)
+SPEED_LIMIT = 110
+LOW_BATTERY_LIMIT = 20
+
 fleet_state = {}
+
+
+def safe_float(x):
+    try:
+        return float(x)
+    except Exception:
+        return None
+
 
 def main():
     consumer = KafkaConsumer(
@@ -27,12 +39,11 @@ def main():
 
     try:
         for message in consumer:
-            topic = message.topic
             data = message.value
 
-            if topic == VEHICLE_TOPIC:
+            if message.topic == VEHICLE_TOPIC:
                 handle_vehicle_status(data)
-            elif topic == RIDE_TOPIC:
+            elif message.topic == RIDE_TOPIC:
                 handle_ride_event(data)
 
     except KeyboardInterrupt:
@@ -40,46 +51,61 @@ def main():
     finally:
         consumer.close()
 
+
 def handle_vehicle_status(data):
     car_id = data.get("car_id")
     if not car_id:
         print("  ⚠ Invalid vehicle message (missing car_id):", data)
         return
 
-    speed = data.get("speed")
-    battery = data.get("battery")
+    # Raw values
+    speed_raw = data.get("speed")
+    battery_raw = data.get("battery")
     temp = data.get("temperature")
     lat = data.get("lat")
     lon = data.get("lon")
 
-    status = "OK"
+    # Safe numeric versions (never crash)
+    speed = safe_float(speed_raw)
+    battery = safe_float(battery_raw)
+
+    # Prefer statuses coming from producer, otherwise compute here
+    speed_status = data.get("speed_status")
+    battery_status = data.get("battery_status")
+
+    # Fallback computation if producer didn't send them (safe)
+    if speed_status is None:
+        speed_status = "OVERSPEED" if (speed is not None and speed > SPEED_LIMIT) else "OK"
+    if battery_status is None:
+        battery_status = "LOW_BATTERY" if (battery is not None and battery < LOW_BATTERY_LIMIT) else "OK"
 
     print(
         f"[VEHICLE] Car {car_id} | "
-        f"speed={speed} km/h | battery={battery}% | temp={temp}°C | "
-        f"lat={lat}, lon={lon}"
+        f"speed={speed} km/h ({speed_status}) | "
+        f"battery={battery}% ({battery_status}) | "
+        f"temp={temp}°C | lat={lat}, lon={lon}"
     )
 
-    # Choose ONE overspeed threshold (pick what you want)
-    if battery is not None and battery < 20:
-        status = "LOW_BATTERY"
+    # Alerts (independent)
+    if battery_status == "LOW_BATTERY":
         print(f"  ⚠ ALERT: Low battery for {car_id} ({battery}%)")
-
-    if speed is not None and speed > 30:
-        status = "OVERSPEED"
+    if speed_status == "OVERSPEED":
         print(f"  ⚠ ALERT: Overspeed detected for {car_id} ({speed} km/h)")
 
+    # Persist state for dashboard
     fleet_state[car_id] = {
         "lat": lat,
         "lon": lon,
         "speed": speed,
         "battery": battery,
         "temperature": temp,
-        "status": status,
+        "speed_status": speed_status,
+        "battery_status": battery_status,
         "last_update": datetime.utcnow().isoformat()
     }
 
     write_fleet_state()
+
 
 def handle_ride_event(data):
     car_id = data.get("car_id")
@@ -89,9 +115,11 @@ def handle_ride_event(data):
 
     print(f"[RIDE] Car {car_id}, User {user_id}, Event={event}, Time={ts}")
 
+
 def write_fleet_state():
     STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
     STATE_FILE.write_text(json.dumps(fleet_state, indent=2), encoding="utf-8")
+
 
 if __name__ == "__main__":
     main()
