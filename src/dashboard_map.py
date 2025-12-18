@@ -15,7 +15,7 @@ STATE_FILE = Path(__file__).resolve().parents[1] / "data" / "fleet_state.json"
 st.set_page_config(page_title="Fleet Map", layout="wide")
 st.title("Autonomous Taxi Fleet – Live Map")
 
-# 🔄 Auto-refresh every 2 seconds
+# Auto-refresh every 2 seconds
 st_autorefresh(interval=2000, key="fleet-refresh")
 
 st.caption(f"Reading state from: {STATE_FILE}")
@@ -95,7 +95,7 @@ COLOR_MAP = {
 }
 
 # --------------------------------------------------
-# MAP (NO PLOTLY LEGEND)
+# MAP
 # --------------------------------------------------
 fig = px.scatter_mapbox(
     df,
