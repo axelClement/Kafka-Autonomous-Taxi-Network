@@ -52,7 +52,7 @@ We chose **Apache Kafka** because:
 ### 4.1 Prerequisites
 
 - Docker and Docker Compose
-- Python 3.x
+- Python 3.11
 - `pip` for installing Python packages
 
 ### 4.2 Clone the Repository

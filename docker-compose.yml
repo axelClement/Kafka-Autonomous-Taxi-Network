@@ -33,3 +33,14 @@ services:
 
       # Logs (inside the container)
       KAFKA_LOG_DIRS: "/tmp/kraft-combined-logs"
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    depends_on:
+      - kafka
+    ports:
+      - "8080:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: "autonomous-taxi-cluster"
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: "kafka:29092"
