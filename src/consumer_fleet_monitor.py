@@ -4,17 +4,13 @@ from kafka import KafkaConsumer
 from pathlib import Path
 from datetime import datetime
 
-
 BROKER = os.getenv("KAFKA_BROKER", "localhost:9092")
 VEHICLE_TOPIC = "vehicle-status"
 RIDE_TOPIC = "ride-events"
 
-
 STATE_FILE = Path(__file__).resolve().parents[1] / "data" / "fleet_state.json"
 
-
 fleet_state = {}
-
 
 def main():
     consumer = KafkaConsumer(
@@ -44,13 +40,15 @@ def main():
     finally:
         consumer.close()
 
-
 def handle_vehicle_status(data):
     car_id = data.get("car_id")
+    if not car_id:
+        print("  ⚠ Invalid vehicle message (missing car_id):", data)
+        return
+
     speed = data.get("speed")
     battery = data.get("battery")
     temp = data.get("temperature")
-
     lat = data.get("lat")
     lon = data.get("lon")
 
@@ -62,6 +60,7 @@ def handle_vehicle_status(data):
         f"lat={lat}, lon={lon}"
     )
 
+    # Choose ONE overspeed threshold (pick what you want)
     if battery is not None and battery < 20:
         status = "LOW_BATTERY"
         print(f"  ⚠ ALERT: Low battery for {car_id} ({battery}%)")
@@ -69,7 +68,6 @@ def handle_vehicle_status(data):
     if speed is not None and speed > 110:
         status = "OVERSPEED"
         print(f"  ⚠ ALERT: Overspeed detected for {car_id} ({speed} km/h)")
-
 
     fleet_state[car_id] = {
         "lat": lat,
@@ -83,9 +81,6 @@ def handle_vehicle_status(data):
 
     write_fleet_state()
 
-  if speed is not None and speed > 30:
-    print(f"  ⚠ ALERT: Overspeed detected for {car_id} ({speed} km/h)")
-
 def handle_ride_event(data):
     car_id = data.get("car_id")
     user_id = data.get("user_id")
@@ -94,14 +89,9 @@ def handle_ride_event(data):
 
     print(f"[RIDE] Car {car_id}, User {user_id}, Event={event}, Time={ts}")
 
-
 def write_fleet_state():
     STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
-    STATE_FILE.write_text(
-        json.dumps(fleet_state, indent=2),
-        encoding="utf-8"
-    )
-
+    STATE_FILE.write_text(json.dumps(fleet_state, indent=2), encoding="utf-8")
 
 if __name__ == "__main__":
     main()
