@@ -88,8 +88,8 @@ class Taxi:
             "speed": round(self.speed, 1),
             "battery": round(self.battery, 1),
             "temperature": int(self.temperature),
-            "latitude": round(self.lat, 6),
-            "longitude": round(self.lon, 6),
+            "lat": round(self.lat, 6),
+            "lon": round(self.lon, 6),
             "timestamp": current_timestamp()
         }
 
