@@ -104,34 +104,52 @@ Kafka is deployed using the **official `apache/kafka` Docker image** in **KRaft 
 
 ### 6.2 Clone Repository and Setup
 
-### 6.3 Create and Activate Virtual Environment
+### 6.3 Option A: Run Everything with Docker (Recommended)
+
+This will start Kafka, Kafka UI, the Producer, and the Consumer in separate containers.
 
 ```bash
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
+docker-compose up --build
 ```
 
-### 6.4 Install Python Dependencies
+- **Kafka UI**: http://localhost:8080
+- **Producer Logs**: `docker logs -f taxi-producer`
+- **Consumer Logs**: `docker logs -f fleet-monitor`
 
-```bash
-pip install -r requirements.txt
-```
+### 6.4 Option B: Manual Local Setup
 
-### 6.5 Start Kafka and Kafka UI
+If you prefer to run Python scripts locally:
 
-```bash
-docker-compose up -d
-```
+1. **Create and Activate Virtual Environment**
 
-**Verify containers:**
+   ```bash
+   python -m venv .venv
+   .\.venv\Scripts\Activate.ps1
+   ```
 
-```bash
-docker ps
-```
+2. **Install Python Dependencies**
 
-Kafka UI will be available at:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-## 7. Running the Minimal Working Example
+3. **Start Kafka and Kafka UI**
+
+   ```bash
+   docker-compose up -d kafka kafka-ui
+   ```
+
+   **Verify containers:**
+
+   ```bash
+   docker ps
+   ```
+
+   Kafka UI will be available at http://localhost:8080.
+
+## 7. Running the Minimal Working Example (Manual Mode)
+
+If you chose **Option B**, follow these steps:
 
 ### 7.1 Start the Consumer
 
@@ -189,7 +207,39 @@ Kafka UI is used to visualize:
 
 Kafka UI provides visual confirmation that the streaming pipeline is working correctly.
 
-## 9. Challenges Encountered and Solutions
+## 9. Real-Time Fleet Visualization (Live Map Dashboard)
+
+In addition to console-based monitoring, the project includes a **real-time fleet visualization dashboard** that displays the live positions of autonomous taxis on a map.
+
+The fleet monitoring consumer maintains an in-memory state of the latest telemetry received for each vehicle, including:
+- GPS position (latitude, longitude)
+- speed
+- battery level
+- operational status (OK, OVERSPEED, LOW_BATTERY)
+
+This state is continuously persisted to a local file (`fleet_state.json`), which acts as a lightweight representation of a **real-time operational data store**.
+
+A separate **Streamlit dashboard** reads this state and renders a **live map of the fleet**, refreshing automatically every two seconds.
+
+### Live Map Features
+
+- Real-time display of taxi positions on an OpenStreetMap background
+- Automatic refresh every 2 seconds
+- Large, clearly visible markers for each taxi
+- Color-coded markers based on vehicle status:
+  - OK
+  - OVERSPEED
+  - LOW_BATTERY
+- Interactive tooltips showing speed, battery level, and last update timestamp
+
+### Running the Live Map Dashboard
+
+In a third terminal, run:
+
+streamlit run src/dashboard_map.py
+
+
+## 10. Challenges Encountered and Solutions
 
 ### Python Version Compatibility
 
@@ -203,7 +253,7 @@ The application worked in VS Code but not in a standard terminal due to differen
 
 **Solution:** We explicitly activated the virtual environment and executed scripts using the virtual environment's Python executable.
 
-## 10. My Setup Notes
+## 11. My Setup Notes
 
 This project highlighted the importance of:
 
@@ -213,7 +263,7 @@ This project highlighted the importance of:
 
 Debugging these issues improved our understanding of real-world Big Data system setup and dependency management.
 
-## 11. How Kafka Fits into a Big Data Ecosystem
+## 12. How Kafka Fits into a Big Data Ecosystem
 
 In a real autonomous taxi platform, Kafka would act as the central streaming backbone, connecting:
 
@@ -226,14 +276,14 @@ In a real autonomous taxi platform, Kafka would act as the central streaming bac
 
 This project represents a simplified but realistic version of such an architecture.
 
-## 12. Possible Extensions
+## 13. Possible Extensions
 
 - Persist events to a database or data lake
 - Add real-time analytics with Kafka Streams or Spark Streaming
 - Implement dashboards for fleet visualization
 - Add anomaly detection or predictive maintenance models
 
-## 13. Conclusion
+## 14. Conclusion
 
 This project demonstrates how Apache Kafka can be used to build a scalable, real-time data streaming system for autonomous vehicles.
 By simulating vehicle telemetry and user ride events, we showcased Kafka’s role in modern Big Data architectures and event-driven systems.
