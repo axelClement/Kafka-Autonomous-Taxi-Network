@@ -8,10 +8,10 @@ BROKER = "localhost:9092"
 VEHICLE_TOPIC = "vehicle-status"
 RIDE_TOPIC = "ride-events"
 
-# Fichier d'état pour la carte
+
 STATE_FILE = Path(__file__).resolve().parents[1] / "data" / "fleet_state.json"
 
-# État global de la flotte
+
 fleet_state = {}
 
 
@@ -50,7 +50,6 @@ def handle_vehicle_status(data):
     battery = data.get("battery")
     temp = data.get("temperature")
 
-    # NOUVEAU : position GPS
     lat = data.get("lat")
     lon = data.get("lon")
 
@@ -70,7 +69,7 @@ def handle_vehicle_status(data):
         status = "OVERSPEED"
         print(f"  ⚠ ALERT: Overspeed detected for {car_id} ({speed} km/h)")
 
-    # Mise à jour de l'état flotte
+
     fleet_state[car_id] = {
         "lat": lat,
         "lon": lon,
