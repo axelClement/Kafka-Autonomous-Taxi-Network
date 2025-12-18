@@ -36,14 +36,15 @@ def generate_vehicle_status():
   lat, lon = random_coordinates()
 
   return {
-      "car_id": car_id,
-      "speed": speed,
-      "battery": battery,
-      "temperature": temperature,
-      "latitude": lat,
-      "longitude": lon,
-      "timestamp": current_timestamp()
-  }
+    "car_id": car_id,
+    "speed": speed,
+    "battery": battery,
+    "temperature": temperature,
+    "lat": lat,
+    "lon": lon,
+    "timestamp": current_timestamp()
+}
+
 
 def generate_ride_event():
   car_id = random.choice(cars)
