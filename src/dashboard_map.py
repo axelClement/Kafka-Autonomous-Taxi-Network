@@ -11,7 +11,7 @@ STATE_FILE = Path(__file__).resolve().parents[1] / "data" / "fleet_state.json"
 st.set_page_config(page_title="Fleet Map", layout="wide")
 st.title("Autonomous Taxi Fleet – Live Map")
 
-# 🔄 Auto-refresh every 2 seconds (Streamlit reruns the script)
+# Auto-refresh every 2 seconds (Streamlit reruns the script)
 st_autorefresh(interval=2000, key="fleet-refresh")
 
 st.caption(f"Reading state from: {STATE_FILE}")
@@ -45,17 +45,13 @@ if df.empty:
     st.warning("No valid GPS points found.")
     st.stop()
 
-# ✅ Color semantics (as requested)
-# - OK -> green
-# - LOW_BATTERY -> red
-# - OVERSPEED -> orange
 COLOR_MAP = {
     "OK": "green",
     "LOW_BATTERY": "red",
     "OVERSPEED": "orange",
 }
 
-# 🗺️ Map: keep map context stable (center/zoom) while points update
+#Map: keep map context stable (center/zoom) while points update
 fig = px.scatter_mapbox(
     df,
     lat="lat",
