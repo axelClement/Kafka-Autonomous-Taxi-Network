@@ -15,7 +15,7 @@ users = ["U-201", "U-202", "U-203", "U-204", "U-205"]
 
 ride_events = ["ride_requested", "ride_started", "ride_canceled", "ride_finished"]
 
-# Simple coordinates around some city (e.g. Paris, Montreal, whatever you like)
+
 base_lat = 48.8566
 base_lon = 2.3522
 
@@ -23,16 +23,15 @@ def current_timestamp():
   return datetime.now(timezone.utc).isoformat()
 
 def random_coordinates():
-  # small random offset around the base location
   lat = base_lat + random.uniform(-0.01, 0.01)
   lon = base_lon + random.uniform(-0.01, 0.01)
   return round(lat, 6), round(lon, 6)
 
 def generate_vehicle_status():
   car_id = random.choice(cars)
-  speed = round(random.uniform(0, 120), 1)      # km/h
-  battery = random.randint(10, 100)             # %
-  temperature = random.randint(15, 40)          # °C
+  speed = round(random.uniform(0, 120), 1)     
+  battery = random.randint(10, 100)            
+  temperature = random.randint(15, 40)         
   lat, lon = random_coordinates()
 
   return {
@@ -70,21 +69,18 @@ def main():
 
   try:
     while True:
-      # Send vehicle status every loop
       vehicle_msg = generate_vehicle_status()
       producer.send(VEHICLE_TOPIC, vehicle_msg)
       print(f"[VEHICLE] Sent: {vehicle_msg}")
 
-      # Sometimes also send a ride event
-      if random.random() < 0.3:  # 30% chance
+  
+      if random.random() < 0.3:  
         ride_msg = generate_ride_event()
         producer.send(RIDE_TOPIC, ride_msg)
         print(f"[RIDE] Sent: {ride_msg}")
 
-      # flush to ensure messages are delivered regularly
       producer.flush()
 
-      # wait 1 second before next iteration
       time.sleep(1.0)
 
   except KeyboardInterrupt:
