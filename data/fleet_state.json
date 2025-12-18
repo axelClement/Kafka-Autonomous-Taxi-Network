@@ -1,0 +1,42 @@
+{
+  "TX-101": {
+    "lat": 48.789858,
+    "lon": 2.118811,
+    "speed": 33.4,
+    "battery": 89.2,
+    "temperature": 37,
+    "speed_status": "OK",
+    "battery_status": "OK",
+    "last_update": "2025-12-18T19:08:33.189198"
+  },
+  "TX-102": {
+    "lat": 48.859312,
+    "lon": 2.597041,
+    "speed": 50.0,
+    "battery": 88.5,
+    "temperature": 44,
+    "speed_status": "OK",
+    "battery_status": "OK",
+    "last_update": "2025-12-18T19:08:33.195218"
+  },
+  "TX-103": {
+    "lat": 48.864651,
+    "lon": 2.554754,
+    "speed": 50.0,
+    "battery": 44.9,
+    "temperature": 28,
+    "speed_status": "OK",
+    "battery_status": "OK",
+    "last_update": "2025-12-18T19:08:33.200134"
+  },
+  "TX-104": {
+    "lat": 48.887338,
+    "lon": 2.427435,
+    "speed": 4.8,
+    "battery": 87.4,
+    "temperature": 39,
+    "speed_status": "OK",
+    "battery_status": "OK",
+    "last_update": "2025-12-18T19:08:33.205042"
+  }
+}
