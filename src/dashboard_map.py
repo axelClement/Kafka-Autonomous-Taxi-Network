@@ -7,6 +7,9 @@ import plotly.express as px
 import plotly.graph_objects as go
 from streamlit_autorefresh import st_autorefresh
 
+# --------------------------------------------------
+# CONFIG
+# --------------------------------------------------
 STATE_FILE = Path(__file__).resolve().parents[1] / "data" / "fleet_state.json"
 
 st.set_page_config(page_title="Fleet Map", layout="wide")
@@ -21,6 +24,9 @@ if not STATE_FILE.exists():
     st.error("fleet_state.json not found. Start the consumer first.")
     st.stop()
 
+# --------------------------------------------------
+# LOAD DATA
+# --------------------------------------------------
 state = json.loads(STATE_FILE.read_text(encoding="utf-8"))
 
 rows = []
@@ -37,26 +43,47 @@ for taxi_id, v in state.items():
 
 df_all = pd.DataFrame(rows)
 
-# ✅ Debug table at the TOP
+# --------------------------------------------------
+# DEBUG (TOP)
+# --------------------------------------------------
 st.subheader("Fleet state (debug)")
 st.dataframe(df_all, use_container_width=True)
 
-missing_gps = df_all[df_all["lat"].isna() | df_all["lon"].isna()]
-if not missing_gps.empty:
-    st.warning(
-        "Some taxis are missing GPS (lat/lon) and won't appear on the map until a valid position is received."
-    )
-    st.dataframe(
-        missing_gps[["taxi_id", "lat", "lon", "status", "last_update"]],
-        use_container_width=True,
-    )
+# --------------------------------------------------
+# REAL FLEET STATUS (DYNAMIC)
+# --------------------------------------------------
+st.subheader("Fleet status (real-time)")
 
+col1, col2, col3 = st.columns(3)
+
+nb_ok = (df_all["status"] == "OK").sum()
+nb_overspeed = (df_all["status"] == "OVERSPEED").sum()
+nb_low_battery = (df_all["status"] == "LOW_BATTERY").sum()
+
+col1.metric("🟢 OK", nb_ok)
+col2.metric("🔴 Overspeed", nb_overspeed)
+col3.metric("⚠ Low battery", nb_low_battery)
+
+# --------------------------------------------------
+# LEGEND (STATIC, ALWAYS VISIBLE)
+# --------------------------------------------------
+st.subheader("Legend")
+
+legend_col1, legend_col2, legend_col3 = st.columns(3)
+
+legend_col1.markdown("🟢 **OK**  \nNormal operation")
+legend_col2.markdown("🔴 **OVERSPEED**  \nSpeed above threshold")
+legend_col3.markdown("⚠ **LOW BATTERY**  \nBattery below 20% (symbol on map)")
+
+# --------------------------------------------------
+# MAP DATA (ONLY VALID GPS)
+# --------------------------------------------------
 df = df_all.dropna(subset=["lat", "lon"])
 if df.empty:
     st.warning("No valid GPS points found yet.")
     st.stop()
 
-# Base color: OK green, OVERSPEED red (LOW_BATTERY keeps base color)
+# Base color: OK green, OVERSPEED red
 def base_status(row):
     return "OVERSPEED" if row["status"] == "OVERSPEED" else "OK"
 
@@ -67,7 +94,9 @@ COLOR_MAP = {
     "OVERSPEED": "red",
 }
 
-# 🗺️ Base map points (color-coded)
+# --------------------------------------------------
+# MAP (NO PLOTLY LEGEND)
+# --------------------------------------------------
 fig = px.scatter_mapbox(
     df,
     lat="lat",
@@ -80,9 +109,9 @@ fig = px.scatter_mapbox(
     center={"lat": 48.8566, "lon": 2.3522},
 )
 
-# Circle size
 fig.update_traces(marker=dict(size=20, opacity=0.9))
 
+# LOW BATTERY overlay (text symbol, reliable)
 low_battery_df = df[df["status"] == "LOW_BATTERY"]
 if not low_battery_df.empty:
     fig.add_trace(
@@ -90,19 +119,23 @@ if not low_battery_df.empty:
             lat=low_battery_df["lat"],
             lon=low_battery_df["lon"],
             mode="text",
-            text=["!"] * len(low_battery_df),          # or "!" if you prefer
+            text=["!"] * len(low_battery_df),
             textposition="middle center",
-            textfont=dict(size=12, color="black"),       # readable on green/red
-            name="Low Battery",
+            textfont=dict(size=18, color="black"),
             hoverinfo="skip",
+            showlegend=False,
         )
     )
 
+# Remove Plotly legend completely
 fig.update_layout(
     mapbox_style="open-street-map",
+    showlegend=False,
     margin={"r": 0, "t": 0, "l": 0, "b": 0},
-    legend_title_text="Status",
 )
 
+# --------------------------------------------------
+# DISPLAY MAP
+# --------------------------------------------------
 st.subheader("Live fleet map")
 st.plotly_chart(fig, use_container_width=True)
