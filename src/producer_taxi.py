@@ -24,10 +24,15 @@ def current_timestamp():
     return datetime.now(timezone.utc).isoformat()
 
 class Taxi:
-    def __init__(self, car_id):
+    def __init__(self, car_id, battery=None):
         self.car_id = car_id
-        self.battery = 100.0
-        self.speed = 0.0
+        # Initialize with random battery to simulate some cars having low battery
+        if battery is not None:
+            self.battery = battery
+        else:
+            self.battery = random.uniform(15.0, 100.0)
+        # Start with some speed
+        self.speed = random.uniform(10.0, 30.0)
         # Start near base location
         self.lat = BASE_LAT + random.uniform(-0.01, 0.01)
         self.lon = BASE_LON + random.uniform(-0.01, 0.01)
@@ -40,13 +45,13 @@ class Taxi:
         # Change speed by -5 to +5 km/h
         delta_speed = random.uniform(-5, 5)
         self.speed += delta_speed
-        # Clamp speed between 0 and 120 km/h
-        self.speed = max(0, min(120, self.speed))
+        # Clamp speed between 0 and 50 km/h (City driving)
+        self.speed = max(0, min(50, self.speed))
 
         # 2. Update Battery
         # Drain depends on speed. Idle drain + movement drain.
-        # Max drain at 120km/h is approx 0.05% per second -> 3% per minute -> empty in 30 mins
-        drain = 0.005 + (self.speed / 120) * 0.05
+        # Adjusted for lower max speed (50km/h)
+        drain = 0.005 + (self.speed / 50) * 0.05
         self.battery -= drain
         
         # Simulate charging if low (magic instant charge for simulation continuity)
@@ -114,7 +119,13 @@ def main():
     print("Starting autonomous taxi producer... (Ctrl+C to stop)")
     
     # Initialize fleet
-    fleet = [Taxi(car_id) for car_id in CAR_IDS]
+    fleet = []
+    for i, car_id in enumerate(CAR_IDS):
+        if i == 0:
+            # Force one car to start with low battery (< 20%)
+            fleet.append(Taxi(car_id, battery=random.uniform(5.0, 19.0)))
+        else:
+            fleet.append(Taxi(car_id))
 
     try:
         while True:
