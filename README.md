@@ -102,84 +102,100 @@ Kafka is deployed using the **official `apache/kafka` Docker image** in **KRaft 
 - Docker and Docker Compose
 - Python 3.11
 
-### 6.2 Clone Repository and Setup
-
-### 6.3 Option A: Run Everything with Docker (Recommended)
-
-This will start Kafka, Kafka UI, the Producer, and the Consumer in separate containers.
+### 6.2 Clone Repository
 
 ```bash
-docker-compose up --build
+git clone https://github.com/axelClement/Kafka-Autonomous-Taxi-Network.git
+cd Kafka-Autonomous-Taxi-Network
 ```
 
-- **Kafka UI**: http://localhost:8080
-- **Producer Logs**: `docker logs -f taxi-producer`
-- **Consumer Logs**: `docker logs -f fleet-monitor`
+## 7. Running the Project
 
-### 6.4 Option B: Manual Local Setup
+You can run the project in two ways:
+- **Option A (Recommended):** Run everything (Kafka, Producer, Consumer, Dashboard) in Docker containers.
+- **Option B (Manual):** Run Kafka in Docker, but run the Python scripts locally on your machine.
 
-If you prefer to run Python scripts locally:
+### 7.1 Option A: Full Docker Deployment
 
-1. **Create and Activate Virtual Environment**
+This method starts all components automatically.
 
-   ```bash
-   python -m venv .venv
-   .\.venv\Scripts\Activate.ps1
-   ```
-
-2. **Install Python Dependencies**
+1. **Start the services:**
 
    ```bash
-   pip install -r requirements.txt
+   docker-compose up --build
    ```
 
-3. **Start Kafka and Kafka UI**
+2. **Access the services:**
 
-   ```bash
-   docker-compose up -d kafka kafka-ui
-   ```
+   - **Kafka UI:** [http://localhost:8080](http://localhost:8080)
+   - **Streamlit Dashboard:** [http://localhost:8501](http://localhost:8501)
 
-   **Verify containers:**
+3. **View Logs:**
 
-   ```bash
-   docker ps
-   ```
+   - Producer: `docker logs -f taxi-producer`
+   - Consumer: `docker logs -f fleet-monitor`
 
-   Kafka UI will be available at http://localhost:8080.
+### 7.2 Option B: Manual Execution (Hybrid)
 
-## 7. Running the Minimal Working Example (Manual Mode)
+Use this method if you want to develop or debug the Python scripts locally.
 
-If you chose **Option B**, follow these steps:
+#### Step 1: Environment Setup
 
-### 7.1 Start the Consumer
+Create and activate a virtual environment, then install dependencies.
 
-In the first terminal:
+```bash
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1  # Windows
+# source .venv/bin/activate   # Mac/Linux
+pip install -r requirements.txt
+```
+
+#### Step 2: Start Infrastructure
+
+Start only the Kafka broker and Kafka UI.
+
+```bash
+docker-compose up -d kafka kafka-ui
+```
+
+- **Kafka UI:** [http://localhost:8080](http://localhost:8080)
+
+#### Step 3: Start the Consumer
+
+In a new terminal:
 
 ```bash
 .\.venv\Scripts\python.exe src\consumer_fleet_monitor.py
 ```
 
 Expected output:
-
 ```
 Fleet Monitoring Consumer started...
 ```
 
-### 7.2 Start the Producer
+#### Step 4: Start the Producer
 
-In a second terminal:
+In a separate terminal:
 
 ```bash
 .\.venv\Scripts\python.exe src\producer_taxi.py
 ```
 
-
 Example producer output:
-
 ```
 [VEHICLE] Sent {...}
 [RIDE] Sent {...}
 ```
+
+#### Step 5: Start the Dashboard
+
+In a third terminal:
+
+```bash
+streamlit run src/dashboard_map.py
+```
+
+- **Streamlit Dashboard:** [http://localhost:8501](http://localhost:8501)
 
 Example consumer output:
 
@@ -236,8 +252,9 @@ A separate **Streamlit dashboard** reads this state and renders a **live map of 
 
 In a third terminal, run:
 
+```bash
 streamlit run src/dashboard_map.py
-
+```
 
 ## 10. Challenges Encountered and Solutions
 
@@ -280,7 +297,7 @@ This project represents a simplified but realistic version of such an architectu
 
 - Persist events to a database or data lake
 - Add real-time analytics with Kafka Streams or Spark Streaming
-- Implement dashboards for fleet visualization
+- Enhance the existing map dashboard with additional metrics and analytics
 - Add anomaly detection or predictive maintenance models
 
 ## 14. Conclusion
