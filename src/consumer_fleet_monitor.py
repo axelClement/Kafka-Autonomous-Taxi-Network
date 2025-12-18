@@ -1,10 +1,11 @@
 import json
+import os
 from kafka import KafkaConsumer
 from pathlib import Path
 from datetime import datetime
 
 
-BROKER = "localhost:9092"
+BROKER = os.getenv("KAFKA_BROKER", "localhost:9092")
 VEHICLE_TOPIC = "vehicle-status"
 RIDE_TOPIC = "ride-events"
 
@@ -82,6 +83,8 @@ def handle_vehicle_status(data):
 
     write_fleet_state()
 
+  if speed is not None and speed > 30:
+    print(f"  ⚠ ALERT: Overspeed detected for {car_id} ({speed} km/h)")
 
 def handle_ride_event(data):
     car_id = data.get("car_id")

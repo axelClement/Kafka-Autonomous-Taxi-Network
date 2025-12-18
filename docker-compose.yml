@@ -44,3 +44,23 @@ services:
     environment:
       KAFKA_CLUSTERS_0_NAME: "autonomous-taxi-cluster"
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: "kafka:29092"
+
+  taxi-producer:
+    build: .
+    container_name: taxi-producer
+    depends_on:
+      - kafka
+    environment:
+      KAFKA_BROKER: "kafka:29092"
+    command: ["python", "src/producer_taxi.py"]
+    restart: on-failure
+
+  fleet-monitor:
+    build: .
+    container_name: fleet-monitor
+    depends_on:
+      - kafka
+    environment:
+      KAFKA_BROKER: "kafka:29092"
+    command: ["python", "src/consumer_fleet_monitor.py"]
+    restart: on-failure

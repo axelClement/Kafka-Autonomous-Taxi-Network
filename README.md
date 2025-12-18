@@ -104,34 +104,52 @@ Kafka is deployed using the **official `apache/kafka` Docker image** in **KRaft 
 
 ### 6.2 Clone Repository and Setup
 
-### 6.3 Create and Activate Virtual Environment
+### 6.3 Option A: Run Everything with Docker (Recommended)
+
+This will start Kafka, Kafka UI, the Producer, and the Consumer in separate containers.
 
 ```bash
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
+docker-compose up --build
 ```
 
-### 6.4 Install Python Dependencies
+- **Kafka UI**: http://localhost:8080
+- **Producer Logs**: `docker logs -f taxi-producer`
+- **Consumer Logs**: `docker logs -f fleet-monitor`
 
-```bash
-pip install -r requirements.txt
-```
+### 6.4 Option B: Manual Local Setup
 
-### 6.5 Start Kafka and Kafka UI
+If you prefer to run Python scripts locally:
 
-```bash
-docker-compose up -d
-```
+1. **Create and Activate Virtual Environment**
 
-**Verify containers:**
+   ```bash
+   python -m venv .venv
+   .\.venv\Scripts\Activate.ps1
+   ```
 
-```bash
-docker ps
-```
+2. **Install Python Dependencies**
 
-Kafka UI will be available at:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-## 7. Running the Minimal Working Example
+3. **Start Kafka and Kafka UI**
+
+   ```bash
+   docker-compose up -d kafka kafka-ui
+   ```
+
+   **Verify containers:**
+
+   ```bash
+   docker ps
+   ```
+
+   Kafka UI will be available at http://localhost:8080.
+
+## 7. Running the Minimal Working Example (Manual Mode)
+
+If you chose **Option B**, follow these steps:
 
 ### 7.1 Start the Consumer
 
