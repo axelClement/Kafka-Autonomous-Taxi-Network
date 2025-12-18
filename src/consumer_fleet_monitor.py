@@ -66,7 +66,7 @@ def handle_vehicle_status(data):
         status = "LOW_BATTERY"
         print(f"  ⚠ ALERT: Low battery for {car_id} ({battery}%)")
 
-    if speed is not None and speed > 110:
+    if speed is not None and speed > 30:
         status = "OVERSPEED"
         print(f"  ⚠ ALERT: Overspeed detected for {car_id} ({speed} km/h)")
 
@@ -82,9 +82,6 @@ def handle_vehicle_status(data):
     }
 
     write_fleet_state()
-
-  if speed is not None and speed > 30:
-    print(f"  ⚠ ALERT: Overspeed detected for {car_id} ({speed} km/h)")
 
 def handle_ride_event(data):
     car_id = data.get("car_id")
