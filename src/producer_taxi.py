@@ -67,6 +67,9 @@ class Taxi:
         # 4) Position update (move according to speed & heading)
         dist_km = self.speed / 3600.0  # distance in 1 second
 
+        # Increase the effect of movement for demo purposes
+        dist_km *= 2  # Double the distance traveled for visual effect
+
         rad = math.radians(self.heading)
 
         # Rough conversions around Paris
