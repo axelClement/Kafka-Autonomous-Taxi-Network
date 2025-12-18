@@ -1,0 +1,75 @@
+# =========================
+# Python
+# =========================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+
+# =========================
+# Python packaging
+# =========================
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# =========================
+# Logs & runtime files
+# =========================
+*.log
+*.pid
+
+# =========================
+# OS files
+# =========================
+# Windows
+Thumbs.db
+Desktop.ini
+
+# macOS
+.DS_Store
+
+# =========================
+# VS Code
+# =========================
+.vscode/
+
+# =========================
+# Docker
+# =========================
+# Docker runtime files (optional)
+docker-data/
+**/tmp/
+**/logs/
+
+# =========================
+# Kafka data (if ever mounted)
+# =========================
+kafka-data/
+zookeeper-data/
+
+# =========================
+# Local data outputs
+# =========================
+data/
+output/
+
+# =========================
+# Jupyter / notebooks (if any)
+# =========================
+.ipynb_checkpoints/
+
+# =========================
+# Environment / secrets
+# =========================
+.env
+
+
+# =========================
+for_me.txt
