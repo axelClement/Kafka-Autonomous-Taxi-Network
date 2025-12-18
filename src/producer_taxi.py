@@ -12,12 +12,12 @@ BROKER = os.getenv("KAFKA_BROKER", "localhost:9092")
 VEHICLE_TOPIC = "vehicle-status"
 RIDE_TOPIC = "ride-events"
 
-CAR_IDS = ["TX-101", "TX-102", "TX-103", "TX-104"]
+CAR_IDS = [f"TX-{100 + i}" for i in range(1, 11)]
 USERS = ["U-201", "U-202", "U-203", "U-204", "U-205"]
 RIDE_EVENTS = ["ride_requested", "ride_started", "ride_canceled", "ride_finished"]
 
 # Thresholds
-SPEED_LIMIT = 30
+SPEED_LIMIT = 30 # 30 km/h for Paris downtown
 LOW_BATTERY_LIMIT = 20
 
 # Base location (Paris)
@@ -30,7 +30,7 @@ def current_timestamp():
 
 
 class Taxi:
-    def __init__(self, car_id, battery=None):
+    def __init__(self, car_id, position_index, battery=None):
         self.car_id = car_id
 
         # Battery initialization (optionally force low battery for demo)
@@ -39,9 +39,12 @@ class Taxi:
         # Start with some speed (km/h)
         self.speed = random.uniform(10.0, 30.0)
 
-        # Start near base location
-        self.lat = BASE_LAT + random.uniform(-0.01, 0.01)
-        self.lon = BASE_LON + random.uniform(-0.01, 0.01)
+        # Spread initial positions around the base location
+        angle = (position_index / len(CAR_IDS)) * 2 * math.pi
+        radius = 0.01
+        jitter = 0.001
+        self.lat = BASE_LAT + radius * math.cos(angle) + random.uniform(-jitter, jitter)
+        self.lon = BASE_LON + radius * math.sin(angle) + random.uniform(-jitter, jitter)
 
         # Random heading (0-360 degrees)
         self.heading = random.uniform(0, 360)
@@ -132,9 +135,9 @@ def main():
     for i, car_id in enumerate(CAR_IDS):
         if i == 0:
             # Force one car to start with low battery (< 20%)
-            fleet.append(Taxi(car_id, battery=random.uniform(5.0, 19.0)))
+            fleet.append(Taxi(car_id, position_index=i, battery=random.uniform(5.0, 19.0)))
         else:
-            fleet.append(Taxi(car_id))
+            fleet.append(Taxi(car_id, position_index=i))
 
     try:
         while True:
