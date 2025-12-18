@@ -53,34 +53,6 @@ In this simulated scenario:
 
 ## 4. System Architecture
 
-+---------------------------+
-| Autonomous Taxis          |
-| (Kafka Producers)         |
-|                           |
-| - Vehicle telemetry       |
-|   (speed, battery, GPS)   |
-| - Ride events             |
-|   (start, stop, cancel)   |
-+-------------+-------------+
-              |
-              v
-+---------------------------+
-| Apache Kafka (KRaft mode) |
-|                           |
-| Topics:                   |
-| - vehicle-status          |
-| - ride-events             |
-+-------------+-------------+
-              |
-              v
-+---------------------------+
-| Fleet Monitoring Service  |
-| (Kafka Consumer)          |
-|                           |
-| - Real-time logs          |
-| - Alerts (battery/speed)  |
-+---------------------------+
-
 High-level architecture:
 
 ```
