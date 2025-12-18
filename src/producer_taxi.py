@@ -1,11 +1,12 @@
 import json
 import random
 import time
+import os
 from datetime import datetime, timezone
 
 from kafka import KafkaProducer
 
-BROKER = "localhost:9092"  # if run inside docker network, use "kafka:9092"
+BROKER = os.getenv("KAFKA_BROKER", "localhost:9092")
 
 VEHICLE_TOPIC = "vehicle-status"
 RIDE_TOPIC = "ride-events"

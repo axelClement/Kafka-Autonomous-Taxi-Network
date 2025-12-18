@@ -1,7 +1,8 @@
 import json
+import os
 from kafka import KafkaConsumer
 
-BROKER = "localhost:9092"
+BROKER = os.getenv("KAFKA_BROKER", "localhost:9092")
 VEHICLE_TOPIC = "vehicle-status"
 RIDE_TOPIC = "ride-events"
 
